@@ -6,25 +6,25 @@
 
 using namespace std; // чтобы не дописывать пространство имён к векторам, свопам и консоли
 					 /* Поиск максимального элемента в столбце
-					 * vector<vector<T> > &matrix матирца
+					 * vector<vector<int> > &matrix матирца
 					 *  int col столбец
 					 *   int n размер
 					 *   возвращает позицию максимального элемента в столбце
 					 */
 int ProcNum, ProcRank;
-template <typename T>// шаблон функции, реальная будет создана на этапе компиляции и масимально оптимизированна
-int col_max(const vector<vector<T> > &matrix, int col, int n)
+
+int col_max(int ** matrix, int col, int n)
 {
-	T max = abs(matrix[col][col]); // берём за минимальный центровой элемент столбца..
+	int max = abs(matrix[col][col]); // берём за минимальный центровой элемент столбца..
 	int maxPos = col; // ..запомним его индекс
 #pragma omp parallel // параллелим поиски
 	{
-		T loc_max = max; // для каждого потока будет локальный максимум..
-		T loc_max_pos = maxPos; // ...и его позиция
+		int loc_max = max; // для каждого потока будет локальный максимум..
+		int loc_max_pos = maxPos; // ...и его позиция
 #pragma omp for // параллельно обрабытываем разные части строки
 		for(int i = col + 1; i < n; ++i) // мы уже запомнили центровой, поэтому проверяем всё от него до конца
 		{
-			T element = abs(matrix[i][col]); // запомним текущий элемент
+			int element = abs(matrix[i][col]); // запомним текущий элемент
 			if(element > loc_max) // если он больше предыдущего максимуму
 			{
 				loc_max = element; // меняем этот максимум
@@ -44,17 +44,17 @@ int col_max(const vector<vector<T> > &matrix, int col, int n)
 }
 /* Триангуляция матрицы (приведение к "треугольному")
 * Треуго́льная матрица — матрица, у которой все элементы, стоящие ниже (или выше) главной диагонали, равны нулю.
-* vector<vector<T> > &matrix матрица для триангулцияя
+* vector<vector<int> > &matrix матрица для триангулцияя
 * int n её размерность
 * Возвращает количество совершенных перестановок
 */
-template <typename T>// шаблон функции, реальная будет создана на этапе компиляции и масимально оптимизированна
-int triangulation(vector<vector<T> > &matrix, int n)
+
+int triangulation(int ** matrix, int n)
 {
 	unsigned int swapCount = 0; // здесь будет счётчик количества перестановок. Очевидно, что он только положительный.
 	if(0 == n) // если матрица пуста...
 		return swapCount; // ...переставлять нечего
-	const int num_cols = matrix[0].size(); // запомним количество столбцов
+	const int num_cols =n; // запомним количество столбцов
 	for(int i = 0; i < n - 1; ++i) // пробегаем по всем строкам кроме поледней, потому что мы не сможем переставить последнюю+1
 	{
 		unsigned int imax = col_max(matrix, i, n); // поиск номера строки содержащей максимальный по модулю элемент столбца с номером i
@@ -66,7 +66,7 @@ int triangulation(vector<vector<T> > &matrix, int n)
 #pragma omp parallel for // параллелим эквивалентные преобразования
 		for(int j = i + 1; j < n; ++j) // пробегаем по всем элементам строки
 		{
-			T mul = -matrix[j][i] / matrix[i][i]; // вычисляем число, на которое нужно домножить
+			int mul = -matrix[j][i] / matrix[i][i]; // вычисляем число, на которое нужно домножить
 			for(int k = i; k < num_cols; ++k)  // бежим по столбцам снова
 			{
 				matrix[j][k] += matrix[i][k] * mul; // домножаем элемент на число и складыываем строки
@@ -76,15 +76,14 @@ int triangulation(vector<vector<T> > &matrix, int n)
 	return swapCount; // возвращаем кол-во перестановок
 }
 /* Поиск определителя методом Гаусса
-* vector<vector<T> > &matrix матрица для поиска
+* vector<vector<int> > &matrix матрица для поиска
 * int n её размерность
 * Возвращает определитель
 */
-template <typename T>// шаблон функции, реальная будет создана на этапе компиляции и масимально оптимизированна
-T gauss_determinant(vector<vector<T> > &matrix, int n)
+int gauss_determinant(int ** matrix, int n)
 {
 	unsigned int swapCount = triangulation(matrix, n); // ищем количество перестановок строк и делаем триангуляцию матрицы
-	T determinanit = 1; // объявляем определитель как 1, на случай если перестановок не будет
+	int determinanit = 1; // объявляем определитель как 1, на случай если перестановок не будет
 	if(swapCount % 2 == 1) // если количество перестановок нечётное...
 		determinanit = -1; // ..очевидно, что определитель будет отрицательный, поскольку при каждой перестановке он меняет знак
 	for(int i = 0; i < n; ++i) // не параллелим этот цикл поскольку на быстродействии это не скажется - только память копиями забьём
@@ -95,8 +94,8 @@ T gauss_determinant(vector<vector<T> > &matrix, int n)
 }
 
 /* Решение СЛАУ методом Крамера
-* vector<vector<T> > &matrix - матрица неизвестых
-*  vector<T> &free_term_column - слобец свободных членов
+* vector<vector<int> > &matrix - матрица неизвестых
+*  vector<int> &free_term_column - слобец свободных членов
 * int n - размерность
 * Возвращает вектор, содержащий решения к матрице
 */
@@ -139,8 +138,7 @@ int * cramer_solving(int ** matrix,int * free_term_column, int n)
 int main(int argc, char *argv[]) // точка входа
 {
 
-	int ProcNum, ProcRank, tmp;
-	MPI_Status status;
+	int ProcNum, ProcRank;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &ProcNum);
 	MPI_Comm_rank(MPI_COMM_WORLD, &ProcRank);
@@ -162,11 +160,18 @@ int main(int argc, char *argv[]) // точка входа
 			int * solution = cramer_solving(matrix, column, n); // запоминаем вектор корней СЛАУ, полученный из автоматически оптимизированной функции cramer_solving,
 																		 //которая принимает матрицу для поиска, столбец свободных членов, размерность матрицы (без столбца св. членов)
 			cout << n << " " << MPI_Wtime() - start_time << endl; // выводим в консоль размерность и затраченное на вычисление время
-			for(int i = 0; i < n; i++)	delete [] matrix[i] ;
-			delete [] matrix;
-			delete[] column;
+			for(int i = 0; i < n; i++)
+			{
+				cout << solution[0] << " ";
+			}
+			cout << endl;
+		//	for(int i = 0; i < n; i++)	delete [] matrix[i] ;
+			//delete [] matrix;
+		//	delete[] column;
 		}
+		system("pause.exe");
 	}
+	
 	MPI_Finalize();
 	return 0;
 }
