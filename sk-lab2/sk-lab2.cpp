@@ -2,23 +2,26 @@
 #include <iostream> // будем использовать потоковый ввод-вывод
 #include <vector> // матрицы оформим как векторы
 #include "omp.h" // используем openMP
+#include <mpi.h> // используем MPI
+
 using namespace std; // чтобы не дописывать пространство имён к векторам, свопам и консоли
-/* Поиск максимального элемента в столбце
-* vector<vector<T> > &matrix матирца
-*  int col столбец
-*   int n размер
-*   возвращает позицию максимального элемента в столбце
-*/
+					 /* Поиск максимального элемента в столбце
+					 * vector<vector<T> > &matrix матирца
+					 *  int col столбец
+					 *   int n размер
+					 *   возвращает позицию максимального элемента в столбце
+					 */
+int ProcNum, ProcRank;
 template <typename T>// шаблон функции, реальная будет создана на этапе компиляции и масимально оптимизированна
 int col_max(const vector<vector<T> > &matrix, int col, int n)
 {
 	T max = abs(matrix[col][col]); // берём за минимальный центровой элемент столбца..
 	int maxPos = col; // ..запомним его индекс
-	#pragma omp parallel // параллелим поиски
+#pragma omp parallel // параллелим поиски
 	{
 		T loc_max = max; // для каждого потока будет локальный максимум..
 		T loc_max_pos = maxPos; // ...и его позиция
-		#pragma omp for // параллельно обрабытываем разные части строки
+#pragma omp for // параллельно обрабытываем разные части строки
 		for(int i = col + 1; i < n; ++i) // мы уже запомнили центровой, поэтому проверяем всё от него до конца
 		{
 			T element = abs(matrix[i][col]); // запомним текущий элемент
@@ -28,7 +31,7 @@ int col_max(const vector<vector<T> > &matrix, int col, int n)
 				loc_max_pos = i; // и запомненную позицию
 			}
 		}
-		#pragma omp critical // потоки не должны переписывать общий максимум, иначе из-за эффекта гонки будет беда. Помечаем область критической
+#pragma omp critical // потоки не должны переписывать общий максимум, иначе из-за эффекта гонки будет беда. Помечаем область критической
 		{
 			if(max < loc_max) // проверяем, больше ли найденные максимум чем тот максимум, который был найден в других потоках
 			{
@@ -40,7 +43,7 @@ int col_max(const vector<vector<T> > &matrix, int col, int n)
 	return maxPos; // вернём позицию максимального
 }
 /* Триангуляция матрицы (приведение к "треугольному")
- * Треуго́льная матрица — матрица, у которой все элементы, стоящие ниже (или выше) главной диагонали, равны нулю.
+* Треуго́льная матрица — матрица, у которой все элементы, стоящие ниже (или выше) главной диагонали, равны нулю.
 * vector<vector<T> > &matrix матрица для триангулцияя
 * int n её размерность
 * Возвращает количество совершенных перестановок
@@ -60,7 +63,7 @@ int triangulation(vector<vector<T> > &matrix, int n)
 			swap(matrix[i], matrix[imax]); // ставим ёё его место максимальной
 			++swapCount; // накидываем счётчик перестановок
 		}
-		#pragma omp parallel for // параллелим эквивалентные преобразования
+#pragma omp parallel for // параллелим эквивалентные преобразования
 		for(int j = i + 1; j < n; ++j) // пробегаем по всем элементам строки
 		{
 			T mul = -matrix[j][i] / matrix[i][i]; // вычисляем число, на которое нужно домножить
@@ -73,10 +76,10 @@ int triangulation(vector<vector<T> > &matrix, int n)
 	return swapCount; // возвращаем кол-во перестановок
 }
 /* Поиск определителя методом Гаусса
- * vector<vector<T> > &matrix матрица для поиска
- * int n её размерность
- * Возвращает определитель
- */
+* vector<vector<T> > &matrix матрица для поиска
+* int n её размерность
+* Возвращает определитель
+*/
 template <typename T>// шаблон функции, реальная будет создана на этапе компиляции и масимально оптимизированна
 T gauss_determinant(vector<vector<T> > &matrix, int n)
 {
@@ -92,48 +95,78 @@ T gauss_determinant(vector<vector<T> > &matrix, int n)
 }
 
 /* Решение СЛАУ методом Крамера
- * vector<vector<T> > &matrix - матрица неизвестых
- *  vector<T> &free_term_column - слобец свободных членов
- * int n - размерность
- * Возвращает вектор, содержащий решения к матрице
- */
-template <typename T> // шаблон функции, реальная будет создана на этапе компиляции и масимально оптимизированна
-vector<T> cramer_solving(vector<vector<T> > &matrix,vector<T> &free_term_column, int n)
+* vector<vector<T> > &matrix - матрица неизвестых
+*  vector<T> &free_term_column - слобец свободных членов
+* int n - размерность
+* Возвращает вектор, содержащий решения к матрице
+*/
+
+int * cramer_solving(int ** matrix,int * free_term_column, int n)
 {
-	T mainDet = gauss_determinant(matrix, n); // вычисляем определитель матрицы неизвестных
+	int mainDet = gauss_determinant(matrix, n); // вычисляем определитель матрицы неизвестных
 	if(abs(mainDet) < 0.0001) // если он не подходит под решение по правилу Крамера
-		throw 20; //кидаем исключение
-	vector<T> solution(n); // создаем вектор решений
-	#pragma omp parallel // просим openMP сделать этот блок параллельно
+		return  nullptr; //кидаем исключение
+	int * solution = new int[n]; // создаем вектор решений
+	if(ProcRank == 0)
 	{
-		vector<vector<T> > private_matrix = matrix; // делаем копию матрицы, чтобы избежать работы в критической секции и эффекта гонки
-		#pragma omp for //параллелим цикл
-		for(int i = 0; i < n; ++i) //бежим по всем столбцам
+		int ** private_matrix = new int*[n];
+		for(int i = 0; i < n; ++i) // делаем копию матрицы, чтобы избежать работы в критической секции и эффекта гонки
 		{
-			swap(matrix[i], free_term_column); // заменяем столбец неизвестных и столбец i в матрице
-			solution[i] = gauss_determinant(private_matrix, n) / mainDet; // изем определитель и делим на главный, результат в вектор
-			swap(matrix[i], free_term_column); // заменяем обратно чтобы не путаться 
+			private_matrix[i] = new int[n];
+			for(int j = 0; j < n; j++)
+				private_matrix[i][j] = matrix[i][j];		
+		}
+
+		for(int i = 1; i < ProcNum; ++i) //бежим по всем столбцам
+		{
+			swap(private_matrix[i], free_term_column); // заменяем столбец неизвестных и столбец i в матрице
+			MPI_Send(&private_matrix, sizeof (int)*n*n, MPI_INT, i, 0, MPI_COMM_WORLD); // Отправляем в другой процесс ( посылаемое,количество, тип, куда,тэг, коммунитатор	)	
+			swap(private_matrix[i], free_term_column);// заменяем обратно чтобы не путаться
+			MPI_Status status;
+			MPI_Recv(&solution[i], sizeof(int), MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status); // получаем из другого процесса ответ в матрицу ответов
 		}
 	}
+	else
+	{
+		MPI_Status status;
+		int ** private_matrix = new int*[n]; // сюда будем писать получаемую матрицу
+		MPI_Recv(&private_matrix, sizeof(int)*n*n, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status); // получаем матрицу (получаемое, колчиестово, тип, откуда, тег, коомутатор, статус)
+		int temp_solution = gauss_determinant(private_matrix, n) / mainDet; // ищем определитель и делим на главный, записываем ответ
+		MPI_Send(&temp_solution, sizeof (int), MPI_INT, 0, 0, MPI_COMM_WORLD); // отправляем этот ответ обратно в главный процесс
+	} 
 	return solution; // возвращаем решения
 }
-int main() // точка входа
+int main(int argc, char *argv[]) // точка входа
 {
-	for(int n = 50; n < 350; n += 50) // основной цикл
+
+	int ProcNum, ProcRank, tmp;
+	MPI_Status status;
+	MPI_Init(&argc, &argv);
+	MPI_Comm_size(MPI_COMM_WORLD, &ProcNum);
+	MPI_Comm_rank(MPI_COMM_WORLD, &ProcRank);
+	if(ProcRank == 0)
 	{
-		vector<vector<double> > matrix(n); // матрица, построенная на векторах цифр с плавующей точкой
-		for(int i = 0; i < n; ++i) // заполнение массива - строки
+		for(int n = 50; n < 350; n += 50) // основной цикл
 		{
-			matrix[i].resize(n); // задаём новый размер кажой строке
-			for(int j = 0; j < n; ++j) // заполнение массива - столбцы
-				matrix[i][j] = rand(); // заполяем элемент M_ij случайным числом
+			int ** matrix = new int*[n];// матрица целочисленная на указателях
+			for(int i = 0; i < n; ++i) // заполнение массива - строки
+			{
+				matrix[i] = new int[n];
+				for(int j = 0; j < n; ++j) // заполнение массива - столбцы
+					matrix[i][j] = rand() % 10; // заполяем элемент M_ij случайным числом меньшим 10
+			}
+			int * column = new int[n]; // создаем столбец свободных членов
+			for(int j = 0; j < n; ++j) //заполняем его - строки
+				column[j] = rand()%10; // заполняем элемент Column_j случайным числом
+			double start_time = MPI_Wtime(); //запоминаем время
+			int * solution = cramer_solving(matrix, column, n); // запоминаем вектор корней СЛАУ, полученный из автоматически оптимизированной функции cramer_solving,
+																		 //которая принимает матрицу для поиска, столбец свободных членов, размерность матрицы (без столбца св. членов)
+			cout << n << " " << MPI_Wtime() - start_time << endl; // выводим в консоль размерность и затраченное на вычисление время
+			for(int i = 0; i < n; i++)	delete [] matrix[i] ;
+			delete [] matrix;
+			delete[] column;
 		}
-		vector<double> column(n); // создаем столбец свободных членов
-		for(int j = 0; j < n; ++j) //заполняем его - строки
-			column[j] = rand(); // заполняем элемент Column_j случайным числом
-		double start_time = omp_get_wtime(); //запоминаем время
-		vector<double> solution = cramer_solving(matrix, column, n); // запоминаем вектор корней СЛАУ, полученный из автоматически оптимизированной функции cramer_solving,
-		//которая принимает матрицу для поиска, столбец свободных членов, размерность матрицы (без столбца св. членов)
-		cout << n << " " << omp_get_wtime() - start_time << endl; // выводим в консоль размерность и затраченное на вычисление время
 	}
+	MPI_Finalize();
+	return 0;
 }
