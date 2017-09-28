@@ -1,0 +1,6 @@
+Parallel section for calculate A and B, num of threads - 1
+Parallel section for calculate C and recalculate B, num of threads - 1
+a: 15 240 142 120 116 120 127 137 148 160 
+b: 1 239.964 141.964 119.964 115.962 119.928 69.0191 77.0179 77.0179 40.0179 
+c: 1.72053e-317 239.929 141.929 119.928 115.924 119.857 11.0381 17.0359 6.03572 -79.9643 
+Time:0.00912905
