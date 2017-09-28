@@ -19,4 +19,7 @@
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="out.txt" />
+  </ItemGroup>
 </Project>
