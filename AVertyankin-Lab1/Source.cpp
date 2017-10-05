@@ -46,10 +46,6 @@ void calculate(int n,int x,int k,bool needPrint) {
 			b[i] = bi(i, x, n);
 		}
 	}
-	for(int i = 0; i < n; i++)
-	{
-		cout << i<< " " << bi(i, x, n) << " " << b[i] << endl;
-	}
 #pragma omp parallel num_threads(k> n ? n: k)
 	{
 		int m = ceil(n / static_cast<double>(omp_get_num_threads()));
@@ -60,13 +56,6 @@ void calculate(int n,int x,int k,bool needPrint) {
 			c[i] = a[i] - bi(n - 1, x, n);
 			b[i] = (a[i] + c[i]) / 2;
 		}
-#pragma omp  critical
-		out << "Parallel section for calculate A and B, num of threads - " << omp_get_num_threads()
-			<< "Thread" << omp_get_thread_num()
-			<< " m:" << m
-			<< " begin: " << begin
-			<< " end: " << end - 1 << endl;
-
 	}
 
 	
