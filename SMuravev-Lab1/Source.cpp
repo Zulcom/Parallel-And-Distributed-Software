@@ -21,6 +21,10 @@ b[i]=(a[i]*c[i])^1/2 , i=1..N
 #include <omp.h>
 #include <fstream>
 using namespace std;
+double bi(int i, int x, int n)
+{
+	return i == 0 ? x *x : (bi(i - 1, x, n) *x) / i;
+}
 void calculate(int n, int x, int k, bool needPrint)
 {
 	double * a = new double[n];
@@ -30,21 +34,26 @@ void calculate(int n, int x, int k, bool needPrint)
 	a[0] = x;
 	b[0] = x*x;
 	ofstream out("out.txt");
-#pragma omp parallel num_threads(k)
+#pragma omp parallel num_threads(k> n ? n: k)
 	{
-		out << "Parallel section for calculate A and B, num of threads - " << omp_get_num_threads() << endl;
-		for(int i = 1; i < n; i++)
+		
+		int m = ceil(n / static_cast<double>(omp_get_num_threads()));
+		int begin = m*omp_get_thread_num() == 0 ? 1 : m*omp_get_thread_num();
+		int end = begin + m > n ? n : begin + m;
+		for(int i = begin; i < end; i++)
 		{
 			a[i] = sin(x*i) + x *x / i;
-			b[i] = (b[i - 1] * x) / i;
+			b[i] = bi(i,x,n);
 		}
 	}
-#pragma omp parallel num_threads(k)
+#pragma omp parallel num_threads(k> n ? n: k)
 	{
-		out << "Parallel section for calculate C and recalculate B, num of threads - " << omp_get_num_threads() << endl;
-		for(int i = 0; i < n; i++)
+		int m = ceil(n / static_cast<double>(omp_get_num_threads()));
+		int begin = m*omp_get_thread_num();
+		int end = begin + m > n ? n : begin + m;
+		for(int i = begin; i < end; i++)
 		{
-			c[i] = a[i] - b[n-1 - i];
+			c[i] = a[i] - bi(n-1-i,x,n);
 			b[i] = sqrt(abs(a[i] * c[i]));
 		}
 	}
