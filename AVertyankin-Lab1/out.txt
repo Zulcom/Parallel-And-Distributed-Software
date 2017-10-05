@@ -1,0 +1,8 @@
+Parallel section for calculate A and B, num of threads - 4Thread0 m:4 begin: 0 end: 3
+Parallel section for calculate A and B, num of threads - 4Thread3 m:4 begin: 12 end: 14
+Parallel section for calculate A and B, num of threads - 4Thread2 m:4 begin: 8 end: 11
+Parallel section for calculate A and B, num of threads - 4Thread1 m:4 begin: 4 end: 7
+a: 4 20 16 17 20 23 26 30 34 37 41 45 49 53 57 
+b: 3.83332 19.8333 15.8333 16.8333 19.8333 22.8333 25.8333 29.8333 33.8333 36.8333 40.8333 44.8333 48.8333 52.8333 56.8333 
+c: 3.66664 19.6666 15.6666 16.6666 19.6666 22.6666 25.6666 29.6666 33.6666 36.6666 40.6666 44.6666 48.6666 52.6666 56.6666 
+Time:0.0169491
