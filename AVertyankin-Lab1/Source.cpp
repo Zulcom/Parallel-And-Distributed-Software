@@ -58,7 +58,6 @@ void calculate(int n,int x,int k,bool needPrint) {
 		}
 	}
 
-	
 	if(needPrint)
 	{	
 		out << "a: ";
