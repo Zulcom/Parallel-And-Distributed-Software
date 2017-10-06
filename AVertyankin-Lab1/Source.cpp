@@ -33,17 +33,19 @@ void calculate(int n,int x,int k,bool needPrint) {
 	double start_time = omp_get_wtime();
 	a[0] = x;
 	b[0] = x/n;
-	ofstream out("out.txt");
+	ofstream out("out.txt",ios::app);
 #pragma omp parallel num_threads(k> n ? n: k)
 	{
 
 		int m = ceil(n / static_cast<double>(omp_get_num_threads()));
-		int begin = m*omp_get_thread_num() == 0 ? 1 : m*omp_get_thread_num();
+		int begin = omp_get_thread_num() == 0 ? 1 : m*omp_get_thread_num();
 		int end = begin + m > n ? n : begin + m;
 		for(int i = begin; i < end; i++)
 		{
 			a[i] = x*i + x*x / i;
 			b[i] = bi(i, x, n);
+		//	b[i] = (b[i - 1] + n / i) / x;
+		//	cout << bi(i, x, n) << " " << b[i] << endl;
 		}
 	}
 #pragma omp parallel num_threads(k> n ? n: k)

@@ -43,9 +43,13 @@ void calculate(int n, int x, int k, bool needPrint)
 		for(int i = begin; i < end; i++)
 		{
 			a[i] = sin(x*i) + x *x / i;
-			b[i] = bi(i,x,n);
+			b[i] = b[i] = (b[i - 1] * x) / i;
+			cout << bi(i, x, n) <<" " << b[i] <<endl;
 		}
 	}
+
+//	out << endl << "b: ";
+	for (int i = 0; i < n; i++)	out << b[i] << " ";
 #pragma omp parallel num_threads(k> n ? n: k)
 	{
 		int m = ceil(n / static_cast<double>(omp_get_num_threads()));

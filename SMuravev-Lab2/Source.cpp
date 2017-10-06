@@ -32,6 +32,10 @@ b[i]=(a[i]*c[i])^1/2 , i=1..N
 #include <omp.h>
 #include <fstream>
 using namespace std;
+double bi(int i, int x, int n)
+{
+	return i == 0 ? x *x : (bi(i - 1, x, n) *x) / i;
+}
 void calculate(int n, int x, int k, bool needPrint)
 {
 	double * a = new double[n];
@@ -40,7 +44,7 @@ void calculate(int n, int x, int k, bool needPrint)
 	double start_time = omp_get_wtime();
 	a[0] = x;
 	b[0] = x *x;
-	ofstream out("out.txt");
+	ofstream out("out.txt",ios::app);
 #pragma omp parallel sections num_threads(k) 
 	{
 		out << "Parallel section for calculate A and B, num of threads - " << omp_get_num_threads() << endl;
@@ -49,7 +53,7 @@ void calculate(int n, int x, int k, bool needPrint)
 		{
 			{
 				a[i] = x*i + x*x / i;
-				b[i] = (b[i - 1] * x) / i;
+				b[i] = bi(i, x, n);
 			}
 		}
 #pragma omp section
@@ -57,7 +61,7 @@ void calculate(int n, int x, int k, bool needPrint)
 		{
 			{
 				a[i] = x*i + x*x / i;
-				b[i] = (b[i - 1] * x) / i;
+				b[i] = bi(i, x, n);
 			}
 		}
 #pragma omp section
@@ -65,7 +69,7 @@ void calculate(int n, int x, int k, bool needPrint)
 		{
 			{
 				a[i] = x*i + x*x / i;
-				b[i] = (b[i - 1] * x) / i;
+				b[i] = bi(i, x, n);
 			}
 		}
 #pragma omp section
@@ -73,7 +77,7 @@ void calculate(int n, int x, int k, bool needPrint)
 		{
 			{
 				a[i] = x*i + x*x / i;
-				b[i] = (b[i - 1] * x) / i;
+				b[i] = bi(i, x, n);
 			}
 		}
 	}
@@ -84,7 +88,7 @@ void calculate(int n, int x, int k, bool needPrint)
 		for(int i = 1; i < n / 4; i++)
 		{
 			{
-				c[i] = a[i] - b[n-1 - i];
+				c[i] = a[i] - bi(n - 1 - i, x, n);
 				b[i] = sqrt(abs(a[i] * c[i]));
 			}
 		}
@@ -92,7 +96,7 @@ void calculate(int n, int x, int k, bool needPrint)
 		for(int i = n / 4; i < 2 * n / 4; i++)
 		{
 			{
-				c[i] = a[i] - b[n - 1 - i];
+				c[i] = a[i] - bi(n - 1 - i, x, n);
 				b[i] = sqrt(abs(a[i] * c[i]));
 			}
 		}
@@ -100,7 +104,7 @@ void calculate(int n, int x, int k, bool needPrint)
 		for(int i = 2 * n / 4; i < 3 * n / 4; i++)
 		{
 			{
-				c[i] = a[i] - b[n - 1 - i];
+				c[i] = a[i] - bi(n - 1 - i, x, n);
 				b[i] = sqrt(abs(a[i] * c[i]));
 			}
 		}
@@ -108,7 +112,7 @@ void calculate(int n, int x, int k, bool needPrint)
 		for(int i = 3 * n / 4; i < 4 * n / 4; i++)
 		{
 			{
-				c[i] = a[i] - b[n - 1 - i];
+				c[i] = a[i] - bi(n - 1 - i, x, n);
 				b[i] = sqrt(abs(a[i] * c[i]));
 			}
 		}
