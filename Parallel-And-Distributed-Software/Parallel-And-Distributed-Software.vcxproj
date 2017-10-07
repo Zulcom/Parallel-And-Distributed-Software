@@ -139,6 +139,9 @@
   <ItemGroup>
     <ClCompile Include="Cross1.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="in.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
