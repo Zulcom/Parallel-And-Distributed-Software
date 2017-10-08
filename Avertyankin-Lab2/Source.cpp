@@ -32,6 +32,10 @@ b[i]=(a[i]+c[i])/2, i=0..N
 #include <omp.h>
 #include <fstream>
 using namespace std;
+double bi(int i, int x, int n)
+{
+	return i == 0 ? x / n : (bi(i - 1, x, n) + n / i) / x;
+}
 void calculate(int n,int x,int k,bool needPrint) {
 	double * a = new double[n];
 	double * b = new double[n];
@@ -48,7 +52,7 @@ void calculate(int n,int x,int k,bool needPrint) {
 		{
 			{
 				a[i] = x*i + x*x / i;
-				b[i] = (b[i - 1] + n / i) / x;
+				b[i] = bi(i, x, n);
 			}
 		}
 #pragma omp section
@@ -56,7 +60,7 @@ void calculate(int n,int x,int k,bool needPrint) {
 		{
 			{
 				a[i] = x*i + x*x / i;
-				b[i] = (b[i - 1] + n / i) / x;
+				b[i] = bi(i, x, n);
 			}
 		}
 #pragma omp section
@@ -64,7 +68,7 @@ void calculate(int n,int x,int k,bool needPrint) {
 		{
 			{
 				a[i] = x*i + x*x / i;
-				b[i] = (b[i - 1] + n / i) / x;
+				b[i] = bi(i, x, n);
 			}
 		}
 #pragma omp section
@@ -72,7 +76,7 @@ void calculate(int n,int x,int k,bool needPrint) {
 		{
 			{
 				a[i] = x*i + x*x / i;
-				b[i] = (b[i - 1] + n / i) / x;
+				b[i] = bi(i, x, n);
 			}
 		}
 	}
@@ -83,7 +87,7 @@ void calculate(int n,int x,int k,bool needPrint) {
 		for(int i = 1; i < n / 4; i++)
 		{
 			{
-				c[i] = a[i] - b[n - i];
+				c[i] = a[i] - bi(n - 1, x, n);
 				b[i] = (a[i] + c[i]) / 2;
 			}
 		}
@@ -91,7 +95,7 @@ void calculate(int n,int x,int k,bool needPrint) {
 		for(int i = n / 4; i < 2 * n / 4; i++)
 		{
 			{
-				c[i] = a[i] - b[n - i];
+				c[i] = a[i] - bi(n - 1, x, n);
 				b[i] = (a[i] + c[i]) / 2;
 			}
 		}
@@ -99,7 +103,7 @@ void calculate(int n,int x,int k,bool needPrint) {
 		for(int i = 2 * n / 4; i < 3 * n / 4; i++)
 		{
 			{
-				c[i] = a[i] - b[n - i];
+				c[i] = a[i] - bi(n - 1, x, n);
 				b[i] = (a[i] + c[i]) / 2;
 			}
 		}
@@ -107,7 +111,7 @@ void calculate(int n,int x,int k,bool needPrint) {
 		for(int i = 3 * n / 4; i < 4 * n / 4; i++)
 		{
 			{
-				c[i] = a[i] - b[n - i];
+				c[i] = a[i] - bi(n - 1, x, n);
 				b[i] = (a[i] + c[i]) / 2;
 			}
 		}

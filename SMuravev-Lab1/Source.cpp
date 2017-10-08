@@ -43,8 +43,8 @@ void calculate(int n, int x, int k, bool needPrint)
 		for(int i = begin; i < end; i++)
 		{
 			a[i] = sin(x*i) + x *x / i;
-			b[i] = b[i] = (b[i - 1] * x) / i;
-			cout << bi(i, x, n) <<" " << b[i] <<endl;
+			b[i] = (b[i - 1] * x) / i;
+			//cout << bi(i, x, n) <<" " << b[i] <<endl;
 		}
 	}
 
