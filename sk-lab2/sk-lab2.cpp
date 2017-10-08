@@ -31,14 +31,13 @@ int col_max(int ** matrix, int col, int n)
 				loc_max_pos = i; // и запомненную позицию
 			}
 		}
-#pragma omp critical // потоки не должны переписывать общий максимум, иначе из-за эффекта гонки будет беда. Помечаем область критической
-		{
+
 			if(max < loc_max) // проверяем, больше ли найденные максимум чем тот максимум, который был найден в других потоках
+#pragma omp critical // потоки не должны переписывать общий максимум, иначе из-за эффекта гонки будет беда. Помечаем область критической
 			{
 				max = loc_max; // если да, то меняем "глобальный" максимум
-				maxPos = loc_max_pos; // и запомненную позицию
+				maxPos = loc_max_pos; // и запомненную позицию	
 			}
-		}
 	}
 	return maxPos; // вернём позицию максимального
 }
@@ -102,37 +101,27 @@ int gauss_determinant(int ** matrix, int n)
 
 int * cramer_solving(int ** matrix,int * free_term_column, int n)
 {
-	int mainDet = gauss_determinant(matrix, n); // вычисляем определитель матрицы неизвестных
-	if(abs(mainDet) < 0.0001) // если он не подходит под решение по правилу Крамера
-		return  nullptr; //кидаем исключение
+	
 	int * solution = new int[n]; // создаем вектор решений
 	if(ProcRank == 0)
 	{
-		int ** private_matrix = new int*[n];
-		for(int i = 0; i < n; ++i) // делаем копию матрицы, чтобы избежать работы в критической секции и эффекта гонки
-		{
-			private_matrix[i] = new int[n];
-			for(int j = 0; j < n; j++)
-				private_matrix[i][j] = matrix[i][j];		
-		}
-
 		for(int i = 1; i < ProcNum; ++i) //бежим по всем столбцам
 		{
-			swap(private_matrix[i], free_term_column); // заменяем столбец неизвестных и столбец i в матрице
+			int ** private_matrix = new int*[n];
+			for(int k = 0; k < n; ++k) // делаем копию матрицы, чтобы избежать работы в критической секции и эффекта гонки
+			{
+				private_matrix[k] = new int[n];
+				for(int j = 0; j < n; j++)
+					private_matrix[k][j] = matrix[k][j];
+			}
+			for(int j = 0; j < n; j++) private_matrix[j][i] = free_term_column[j]; // заменяем столбец на столбец свободных члено
+			cout << "From " << i;
 			MPI_Send(&private_matrix, sizeof (int)*n*n, MPI_INT, i, 0, MPI_COMM_WORLD); // Отправляем в другой процесс ( посылаемое,количество, тип, куда,тэг, коммунитатор	)	
-			swap(private_matrix[i], free_term_column);// заменяем обратно чтобы не путаться
 			MPI_Status status;
 			MPI_Recv(&solution[i], sizeof(int), MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status); // получаем из другого процесса ответ в матрицу ответов
+			cout << "Recived " << &solution[i]<<endl;
 		}
 	}
-	else
-	{
-		MPI_Status status;
-		int ** private_matrix = new int*[n]; // сюда будем писать получаемую матрицу
-		MPI_Recv(&private_matrix, sizeof(int)*n*n, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status); // получаем матрицу (получаемое, колчиестово, тип, откуда, тег, коомутатор, статус)
-		int temp_solution = gauss_determinant(private_matrix, n) / mainDet; // ищем определитель и делим на главный, записываем ответ
-		MPI_Send(&temp_solution, sizeof (int), MPI_INT, 0, 0, MPI_COMM_WORLD); // отправляем этот ответ обратно в главный процесс
-	} 
 	return solution; // возвращаем решения
 }
 int main(int argc, char *argv[]) // точка входа
@@ -142,9 +131,11 @@ int main(int argc, char *argv[]) // точка входа
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &ProcNum);
 	MPI_Comm_rank(MPI_COMM_WORLD, &ProcRank);
+	int n = 50;
+	int mainDet = 0;
 	if(ProcRank == 0)
 	{
-		for(int n = 50; n < 350; n += 50) // основной цикл
+		for(n = 50; n < 350; n += 50) // основной цикл
 		{
 			int ** matrix = new int*[n];// матрица целочисленная на указателях
 			for(int i = 0; i < n; ++i) // заполнение массива - строки
@@ -156,6 +147,7 @@ int main(int argc, char *argv[]) // точка входа
 			int * column = new int[n]; // создаем столбец свободных членов
 			for(int j = 0; j < n; ++j) //заполняем его - строки
 				column[j] = rand()%10; // заполняем элемент Column_j случайным числом
+			mainDet = gauss_determinant(matrix, n);
 			double start_time = MPI_Wtime(); //запоминаем время
 			int * solution = cramer_solving(matrix, column, n); // запоминаем вектор корней СЛАУ, полученный из автоматически оптимизированной функции cramer_solving,
 																		 //которая принимает матрицу для поиска, столбец свободных членов, размерность матрицы (без столбца св. членов)
@@ -165,13 +157,17 @@ int main(int argc, char *argv[]) // точка входа
 				cout << solution[0] << " ";
 			}
 			cout << endl;
-		//	for(int i = 0; i < n; i++)	delete [] matrix[i] ;
-			//delete [] matrix;
-		//	delete[] column;
 		}
-		system("pause.exe");
 	}
-	
+	else
+	{
+		MPI_Status status;
+		int ** private_matrix = new int*[n]; // сюда будем писать получаемую матрицу
+		MPI_Recv(&private_matrix, sizeof(int)*n*n, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status); // получаем матрицу (получаемое, колчиестово, тип, откуда, тег, коомутатор, статус)
+		int temp_solution = gauss_determinant(private_matrix, n) / mainDet; // ищем определитель и делим на главный, записываем ответ
+		MPI_Send(&temp_solution, sizeof(int), MPI_INT, 0, 0, MPI_COMM_WORLD); // отправляем этот ответ обратно в главный процесс
+	}
 	MPI_Finalize();
+	system("pause.exe");
 	return 0;
 }
