@@ -35,25 +35,25 @@
 #include <omp.h>
 #include <fstream>
 
-double avgPerc(double* a, double* b, int n)
+int avgPerc(int* a, int* b, int n)
 	{
-	double sum = 0;
+	int sum = 0;
 #pragma omp parallel for reduction(+:sum)
-	for (int i = 0; i < n; i++) sum = (100 * b[i] / a[i]);
+	for (int i = 0; i < n; i++) sum += (100 * b[i] / a[i]);
 	return sum / n;
 	}
 
-double max(double* A, int n)
+int max(int* A, int n)
 	{
-	double max_val= DBL_MAX;
+	int max_val= DBL_MAX;
 #pragma omp parallel for reduction(max:max_val)
 	for (int i = 0; i < n; i++) max_val = max_val > A[i] ? max_val : A[i];
 	return max_val;
 	}
 
-double min(double* A, int n)
+int min(int* A, int n)
 	{
-	double min_val= DBL_MIN;
+	int min_val= DBL_MIN;
 #pragma omp parallel for reduction(min:max_val)
 	for (int i = 0; i < n; i++) min_val = min_val > A[i] ? min_val : A[i];
 	return min_val;
@@ -63,9 +63,9 @@ int main(int argc, char* argv[]){
 	int k, n, x, m;
 	std::cout << "Num threads,array size,x, segment count: ";
 	std::cin >> k >> n >> x >> m;
-	double* a = new double[n]; // взятки
-	double* b = new double[n]; // откаты
-	double* c = new double[n]; // присвоенные суммы
+	int* a = new int[n]; // взятки
+	int* b = new int[n]; // откаты
+	int* c = new int[n]; // присвоенные суммы
 	int* counter = new int[m](); // счётчик значений в промежутках
 
 	std::ofstream a_out("a.txt");
@@ -81,16 +81,16 @@ int main(int argc, char* argv[]){
 #pragma omp parallel for ordered
 	for (int i = 1; i < n; i++)
 	{
-		a[i] = sin(x * i) + x * x / i;
+		a[i] =i*i;
 #pragma omp ordered
-		b[i] = (b[i - 1] * x) / i;
+		b[i] = i;
 	}
 #pragma omp parallel for
 	for (int i = 0; i < n; i++) c[i] = a[i] - b[i];
 
-	double c_min = min(c, n);
-	double c_max = max(c, n);
-	double segLenght = (c_max - c_min) / m;
+	int c_min = min(c, n);
+	int c_max = max(c, n);
+	int segLenght = (c_max - c_min) / m;
 	histogram << "Количество интервалов " << m << std::endl
 		<< "диапозон значений от" << c_min << " до " << c_max << std::endl;
 
@@ -102,12 +102,12 @@ int main(int argc, char* argv[]){
 	}
 	a_out.close();
 	b_out.close();
-	double avg_perc = avgPerc(a, b, n);
+	int avg_perc = avgPerc(a, b, n);
 	fax << "средний процент отката от суммы взятки : " << avg_perc
 		<< std::endl << "число служащих : " << omp_get_num_threads() << std::endl;
 #pragma omp parallel num_threads(k> n ? n: k)
 	{
-		int segSize = ceil(n / static_cast<double>(omp_get_num_threads()));
+		int segSize = ceil(n / static_cast<int>(omp_get_num_threads()));
 		int begin = segSize * omp_get_thread_num() == 0 ? 1 : segSize * omp_get_thread_num();
 		int end = begin + segSize > n ? n : begin + segSize;
 		for (int i = begin; i < end; i++)
