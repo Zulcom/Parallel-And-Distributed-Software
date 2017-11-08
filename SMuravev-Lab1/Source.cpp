@@ -40,12 +40,12 @@ void calculate(int n, int x, int k, bool needPrint)
 		int m = ceil(n / static_cast<double>(omp_get_num_threads()));
 		int begin = m*omp_get_thread_num() == 0 ? 1 : m*omp_get_thread_num();
 		int end = begin + m > n ? n : begin + m;
-		for(int i = begin; i < end; i++)
+		for(int i = 1; i < n; i++)
 		{
-			a[i] = sin(x*i) + x *x / i;
-			b[i] = (b[i - 1] * x) / i;
-			//cout << bi(i, x, n) <<" " << b[i] <<endl;
+			a[i] = x*i + x*x / i;
+			b[i] = bi(i, x, n);
 		}
+		
 	}
 
 //	out << endl << "b: ";
@@ -60,6 +60,7 @@ void calculate(int n, int x, int k, bool needPrint)
 			c[i] = a[i] - bi(n-1-i,x,n);
 			b[i] = sqrt(abs(a[i] * c[i]));
 		}
+		
 	}
 	if(needPrint)
 	{

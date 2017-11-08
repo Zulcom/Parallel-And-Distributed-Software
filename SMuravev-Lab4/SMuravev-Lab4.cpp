@@ -40,13 +40,13 @@ int avgPerc(int* a, int* b, int n)
 	int sum = 0;
 #pragma omp parallel for reduction(+:sum)
 	for (int i = 0; i < n; i++) sum += (100 * b[i] / a[i]);
-	return sum / n;
+	return (double) sum / (double) n;
 	}
 
 int max(int* A, int n)
 	{
 	int max_val= DBL_MAX;
-#pragma omp parallel for reduction(max:max_val)
+#pragma omp parallel for 
 	for (int i = 0; i < n; i++) max_val = max_val > A[i] ? max_val : A[i];
 	return max_val;
 	}
@@ -54,7 +54,7 @@ int max(int* A, int n)
 int min(int* A, int n)
 	{
 	int min_val= DBL_MIN;
-#pragma omp parallel for reduction(min:max_val)
+#pragma omp parallel for 
 	for (int i = 0; i < n; i++) min_val = min_val > A[i] ? min_val : A[i];
 	return min_val;
 	}
@@ -75,15 +75,14 @@ int main(int argc, char* argv[]){
 	std::ofstream fax("fax.txt", std::ios::app);
 	std::ofstream print("print.txt", std::ios::app);
 	std::ofstream histogram("histogram.txt");
-	a[0] = x;
-	b[0] = x * x;
+	a[0] = x*x;
+	b[0] = x;
 
 #pragma omp parallel for ordered
 	for (int i = 1; i < n; i++)
 	{
-		a[i] =i*i;
-#pragma omp ordered
-		b[i] = i;
+		a[i] =i*i*exp(rand()%10);
+		b[i] = i/x + rand()%100 ;
 	}
 #pragma omp parallel for
 	for (int i = 0; i < n; i++) c[i] = a[i] - b[i];
@@ -103,18 +102,25 @@ int main(int argc, char* argv[]){
 	a_out.close();
 	b_out.close();
 	int avg_perc = avgPerc(a, b, n);
+	
 	fax << "средний процент отката от суммы взятки : " << avg_perc
-		<< std::endl << "число служащих : " << omp_get_num_threads() << std::endl;
-#pragma omp parallel num_threads(k> n ? n: k)
+		<< std::endl << "число служащих : " << (k> n ? n : k) << std::endl;
+#pragma omp parallel num_threads(k> n ? n: k) shared(avg_perc)
 	{
 		int segSize = ceil(n / static_cast<int>(omp_get_num_threads()));
-		int begin = segSize * omp_get_thread_num() == 0 ? 1 : segSize * omp_get_thread_num();
+		int begin = segSize * omp_get_thread_num();
 		int end = begin + segSize > n ? n : begin + segSize;
-		for (int i = begin; i < end; i++)
+		if(omp_get_thread_num() == 0)
 		{
-			if (100 * b[i] / a[i] > avg_perc)
+			begin = 0;
+			end = segSize;
+		}
+		for(int i = begin; i < end; i++){
+			if((100 * b[i] / a[i]) > avg_perc) 
 #pragma  omp critical
-			{ fax << "служащий " << omp_get_thread_num() << " сообщение " << i << " сумма " << b[i] << std::endl; }
+			{
+				fax << "служащий " << omp_get_thread_num() << " сообщение " << i << " сумма " << b[i] << std::endl;
+			}
 			i = (i == 0) ? 1 : (i == n) ? n - 1 : i;
 			if (a[i] > a[i - 1] && a[i] < a[i + 1])
 #pragma  omp critical
@@ -131,4 +137,5 @@ int main(int argc, char* argv[]){
 	delete[] b;
 	delete[] c;
 	delete[] counter;
+	system("pause.exe");
 }
