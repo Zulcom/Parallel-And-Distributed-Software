@@ -121,10 +121,10 @@ int main(int argc, char* argv[]){
 			{
 				fax << "служащий " << omp_get_thread_num() << " сообщение " << i << " сумма " << b[i] << std::endl;
 			}
-			i = (i == 0) ? 1 : (i == n) ? n - 1 : i;
-			if (a[i] > a[i - 1] && a[i] < a[i + 1])
+			k = (i == 0) ? 1 : (i == n) ? n - 1 : i;
+			if (a[k] > a[i - 1] && a[k] < a[k + 1])
 #pragma  omp critical
-			{ print << "служащий " << omp_get_thread_num() << " сообщение " << i << " сумма " << a[i] <<std::endl; }
+			{ print << "служащий " << omp_get_thread_num() << " сообщение " << k << " сумма " << a[k] <<std::endl; }
 			for (int j = 0; j < m; j++)
 				if (c[i] >= c_min + (j * segLenght) && c[i] <= c_min + (j+1 * segLenght))
 #pragma omp atomic
