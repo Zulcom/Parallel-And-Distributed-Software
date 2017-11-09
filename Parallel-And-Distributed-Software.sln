@@ -25,6 +25,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SMuravev-Lab4", "SMuravev-L
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SMuravev-Lab4-mute", "SMuravev-Lab4-mute\SMuravev-Lab4-mute.vcxproj", "{4DC715D4-9D67-4BF0-ABDD-F2CBCCCE8FA1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AVertyankin-Lab4", "AVertyankin-Lab4\AVertyankin-Lab4.vcxproj", "{3EE06CA0-CBE1-4A51-A8D9-964F57646680}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AVertyankin-Lab4-mute", "AVertyankin-Lab4-mute\AVertyankin-Lab4-mute.vcxproj", "{CFA1022C-063D-4BBF-B654-72B3A54F0286}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -145,6 +149,26 @@ Global
 		{4DC715D4-9D67-4BF0-ABDD-F2CBCCCE8FA1}.Release|x64.Build.0 = Release|x64
 		{4DC715D4-9D67-4BF0-ABDD-F2CBCCCE8FA1}.Release|x86.ActiveCfg = Release|Win32
 		{4DC715D4-9D67-4BF0-ABDD-F2CBCCCE8FA1}.Release|x86.Build.0 = Release|Win32
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Debug|x64.ActiveCfg = Debug|x64
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Debug|x64.Build.0 = Debug|x64
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Debug|x86.ActiveCfg = Debug|Win32
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Debug|x86.Build.0 = Debug|Win32
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Release|Any CPU.ActiveCfg = Release|Win32
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Release|x64.ActiveCfg = Release|x64
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Release|x64.Build.0 = Release|x64
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Release|x86.ActiveCfg = Release|Win32
+		{3EE06CA0-CBE1-4A51-A8D9-964F57646680}.Release|x86.Build.0 = Release|Win32
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Debug|x64.ActiveCfg = Debug|x64
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Debug|x64.Build.0 = Debug|x64
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Debug|x86.ActiveCfg = Debug|Win32
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Debug|x86.Build.0 = Debug|Win32
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Release|Any CPU.ActiveCfg = Release|Win32
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Release|x64.ActiveCfg = Release|x64
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Release|x64.Build.0 = Release|x64
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Release|x86.ActiveCfg = Release|Win32
+		{CFA1022C-063D-4BBF-B654-72B3A54F0286}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
